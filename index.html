@@ -140,12 +140,17 @@
 
       for (let i = 1; i <= dias; i++) {
         const tr = document.createElement('tr');
+        const id = `dia-${i}`;
+        const checkboxChecked = localStorage.getItem(id) === 'true';
+
         tr.innerHTML = `
           <td>${i}</td>
           <td class="entrada">R$0,00</td>
           <td>${oddPadrao}</td>
           <td class="retorno">R$0,00</td>
-          <td class="checkbox-container"><input type="checkbox" /></td>
+          <td class="checkbox-container">
+            <input type="checkbox" data-dia="${id}" ${checkboxChecked ? 'checked' : ''} />
+          </td>
           <td class="resultado">-</td>
         `;
         corpoTabela.appendChild(tr);
@@ -192,8 +197,13 @@
 
     filtro.addEventListener('change', aplicarFiltro);
     valorInicialInput.addEventListener('input', atualizarTabela);
+
     window.addEventListener('change', e => {
-      if (e.target.type === 'checkbox') atualizarResultado();
+      if (e.target.type === 'checkbox') {
+        const dia = e.target.getAttribute('data-dia');
+        localStorage.setItem(dia, e.target.checked);
+        atualizarResultado();
+      }
     });
 
     window.onload = atualizarTabela;
