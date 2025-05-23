@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulação de Apostas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .controls label,
+    .controls input,
+    .controls select {
+      font-size: 16px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #333;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .checkbox-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      th, td {
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .controls label,
+      .controls input,
+      .controls select {
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      th, td {
+        padding: 6px;
+        font-size: 12px;
+      }
+
+      h1 {
+        font-size: 18px;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulação de Apostas - 31 Dias</h1>
+
+  <div class="controls">
+    <label for="valorInicial">Valor Inicial (R$):</label>
+    <input type="number" id="valorInicial" value="100" min="1" step="0.01"/>
+    <label for="filtro">Filtrar resultado:</label>
+    <select id="filtro">
+      <option value="todos">Todos</option>
+      <option value="ganhos">Ganhos</option>
+      <option value="perdas">Perdas</option>
+    </select>
+  </div>
+
+  <div class="table-container">
+    <table id="tabela">
+      <thead>
+        <tr>
+          <th>DIA</th>
+          <th>ENTRADA</th>
+          <th>ODD</th>
+          <th>RETORNO</th>
+          <th>GANHOU?</th>
+          <th>RESULTADO</th>
+        </tr>
+      </thead>
+      <tbody id="corpoTabela"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const filtro = document.getElementById('filtro');
+    const corpoTabela = document.getElementById('corpoTabela');
+    const valorInicialInput = document.getElementById('valorInicial');
+    const oddPadrao = 1.5;
+    const dias = 31;
+
+    function atualizarTabela() {
+      corpoTabela.innerHTML = '';
+
+      for (let i = 1; i <= dias; i++) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i}</td>
+          <td class="entrada">R$0,00</td>
+          <td>${oddPadrao}</td>
+          <td class="retorno">R$0,00</td>
+          <td class="checkbox-container"><input type="checkbox" /></td>
+          <td class="resultado">-</td>
+        `;
+        corpoTabela.appendChild(tr);
+      }
+
+      atualizarResultado();
+    }
+
+    function atualizarResultado() {
+      let banca = parseFloat(valorInicialInput.value);
+      const linhas = corpoTabela.querySelectorAll('tr');
+
+      linhas.forEach(linha => {
+        const checkbox = linha.querySelector('input[type="checkbox"]');
+        const entrada = parseFloat((banca * 0.5).toFixed(2));
+        const retorno = parseFloat((entrada * oddPadrao).toFixed(2));
+        const ganhou = checkbox.checked;
+
+        linha.querySelector('.entrada').innerText = `R$${entrada.toFixed(2)}`;
+        linha.querySelector('.retorno').innerText = ganhou ? `R$${retorno.toFixed(2)}` : `R$0,00`;
+        linha.querySelector('.resultado').innerText = ganhou ? 'GANHOU' : 'PERDEU';
+
+        banca = ganhou
+          ? banca - entrada + retorno
+          : banca - entrada;
+      });
+
+      aplicarFiltro();
+    }
+
+    function aplicarFiltro() {
+      const valor = filtro.value;
+      const linhas = corpoTabela.querySelectorAll('tr');
+
+      linhas.forEach(linha => {
+        const resultado = linha.querySelector('.resultado').innerText.toLowerCase();
+        linha.style.display = (
+          valor === 'todos' ||
+          (valor === 'ganhos' && resultado.includes('ganhou')) ||
+          (valor === 'perdas' && resultado.includes('perdeu'))
+        ) ? '' : 'none';
+      });
+    }
+
+    filtro.addEventListener('change', aplicarFiltro);
+    valorInicialInput.addEventListener('input', atualizarTabela);
+    window.addEventListener('change', e => {
+      if (e.target.type === 'checkbox') atualizarResultado();
+    });
+
+    window.onload = atualizarTabela;
+  </script>
+</body>
+</html>
